@@ -5,8 +5,20 @@
     <property name="default_width">800</property>
     <property name="default_height">600</property>
     <child>
-      <object class="GtkLabel">
-        <property name="label">Hello, World!</property>
+      <object class="GtkBox">
+        <child>
+          <object class="GtkLabel">
+            <property name="label">Namespace: </property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkDropDown">
+            <property name="model">
+              <object class="GtkStringList" id="namespaces">
+              </object>
+            </property>
+          </object>
+        </child>
       </object>
     </child>
   </template>
