@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<interface>
+  <template class="RflWindow" parent="GtkApplicationWindow">
+    <property name="title">Reflector</property>
+    <property name="default_width">800</property>
+    <property name="default_height">600</property>
+    <child>
+      <object class="GtkLabel">
+        <property name="label">Hello, World!</property>
+      </object>
+    </child>
+  </template>
+</interface>
