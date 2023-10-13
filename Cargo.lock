@@ -1390,6 +1390,7 @@ version = "0.1.0"
 dependencies = [
  "gtk4",
  "gvdb-macros",
+ "indexmap",
  "k8s-openapi",
  "kube",
  "once_cell",

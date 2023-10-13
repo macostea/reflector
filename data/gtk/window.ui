@@ -6,17 +6,33 @@
     <property name="default_height">600</property>
     <child>
       <object class="GtkBox">
+        <property name="orientation">vertical</property>
         <child>
-          <object class="GtkLabel">
-            <property name="label">Namespace: </property>
+          <object class="GtkBox">
+            <child>
+              <object class="GtkLabel">
+                <property name="label">Namespace: </property>
+              </object>
+            </child>
+            <child>
+              <object class="GtkDropDown" id="namespace_dropdown">
+                <property name="model">
+                  <object class="GtkStringList" id="namespaces">
+                  </object>
+                </property>
+              </object>
+            </child>
           </object>
         </child>
         <child>
-          <object class="GtkDropDown">
-            <property name="model">
-              <object class="GtkStringList" id="namespaces">
+          <object class="GtkScrolledWindow" id="scrolled_window">
+            <property name="vexpand">True</property>
+            <property name="min-content-height">360</property>
+            <child>
+              <object class="GtkListView" id="list_view">
+                <property name="valign">start</property>
               </object>
-            </property>
+            </child>
           </object>
         </child>
       </object>

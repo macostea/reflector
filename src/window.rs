@@ -3,14 +3,15 @@ use gtk::{
     glib::{self, clone, MainContext},
     prelude::*,
     subclass::prelude::*,
-    CompositeTemplate, StringList,
+    CompositeTemplate, DropDown, ListItem, NoSelection, SignalListItemFactory, StringList,
+    StringObject,
 };
-use std::iter;
+use std::cell::RefCell;
 
 use k8s_openapi::api::core::v1::{Namespace, Pod};
 use kube::{api::ListParams, Api, Client};
 
-use crate::{spawn, spawn_tokio};
+use crate::{pod_row::RflPodRow, spawn_tokio};
 
 mod imp {
     use super::*;
@@ -20,6 +21,13 @@ mod imp {
     pub struct RflWindow {
         #[template_child]
         pub(super) namespaces: TemplateChild<StringList>,
+        #[template_child]
+        pub(super) namespace_dropdown: TemplateChild<DropDown>,
+
+        #[template_child]
+        pub(super) list_view: TemplateChild<gtk::ListView>,
+
+        pub pods: RefCell<Option<gio::ListStore>>,
     }
 
     #[glib::object_subclass]
@@ -42,31 +50,11 @@ mod imp {
         fn constructed(&self) {
             self.parent_constructed();
 
-            let (sender, receiver) = MainContext::channel::<Vec<String>>(glib::PRIORITY_DEFAULT);
-
-            spawn_tokio!(async move {
-                let client = Client::try_default().await.unwrap();
-                let namespaces: Api<Namespace> = Api::all(client);
-                let lp = ListParams::default();
-                let ns = namespaces.list(&lp).await.unwrap();
-                let mut names = Vec::new();
-
-                for n in ns.items {
-                    names.push(n.metadata.name.unwrap());
-                }
-
-                sender.send(names).unwrap();
-            });
-
-            receiver.attach(
-                None,
-                clone!(@weak self as window => @default-return glib::Continue(false), move |name| {
-                  for n in name {
-                    window.namespaces.append(&n);
-                  }
-                  glib::Continue(true)
-                }),
-            );
+            let obj = self.obj();
+            obj.setup_pods();
+            obj.get_namespaces();
+            obj.setup_callbacks();
+            obj.setup_factory();
         }
     }
     impl WidgetImpl for RflWindow {}
@@ -84,5 +72,124 @@ glib::wrapper! {
 impl RflWindow {
     pub fn new<A: IsA<gtk::Application>>(app: &A) -> Self {
         glib::Object::builder().property("application", app).build()
+    }
+
+    fn get_namespaces(&self) {
+        let (sender, receiver) = MainContext::channel::<Vec<String>>(glib::PRIORITY_DEFAULT);
+
+        spawn_tokio!(async move {
+            let client = Client::try_default().await.unwrap();
+            let namespaces: Api<Namespace> = Api::all(client);
+            let lp = ListParams::default();
+            let ns = namespaces.list(&lp).await.unwrap();
+            let mut names = Vec::new();
+
+            for n in ns.items {
+                names.push(n.metadata.name.unwrap());
+            }
+
+            sender.send(names).unwrap();
+        });
+
+        receiver.attach(
+            None,
+            clone!(@weak self as window => @default-return glib::Continue(false), move |name| {
+              for n in name {
+                window.imp().namespaces.append(&n);
+              }
+              glib::Continue(true)
+            }),
+        );
+    }
+
+    fn pods(&self) -> gio::ListStore {
+        self.imp()
+            .pods
+            .borrow()
+            .clone()
+            .expect("Could not get pods")
+    }
+
+    fn setup_pods(&self) {
+        let model = gio::ListStore::new(crate::models::pod::Pod::static_type());
+
+        self.imp().pods.replace(Some(model));
+
+        let selection_model = NoSelection::new(Some(self.pods()));
+        self.imp().list_view.set_model(Some(&selection_model));
+    }
+
+    fn setup_callbacks(&self) {
+        self.imp().namespace_dropdown.connect_notify_local(
+            Some("selected-item"),
+            clone!(@weak self as window => move |drop_down, _| {
+              let item = drop_down.selected_item().and_downcast::<StringObject>().unwrap();
+              window.get_pods_for_namespace(item.string().to_string());
+              println!("Selected item: {:?}", item.string());
+            }),
+        );
+    }
+
+    fn setup_factory(&self) {
+        let factory = SignalListItemFactory::new();
+
+        factory.connect_setup(move |_, list_item| {
+            let pod_row = RflPodRow::new();
+            list_item
+                .downcast_ref::<ListItem>()
+                .expect("Needs to be a ListItem")
+                .set_child(Some(&pod_row));
+        });
+
+        factory.connect_bind(move |_, list_item| {
+            let obj = list_item
+                .downcast_ref::<ListItem>()
+                .expect("Needs to be a ListItem")
+                .item()
+                .and_downcast::<crate::models::pod::Pod>()
+                .expect("Needs to be a Pod");
+
+            let pod_row = list_item
+                .downcast_ref::<ListItem>()
+                .expect("Needs to be a ListItem")
+                .child()
+                .and_downcast::<RflPodRow>()
+                .expect("Needs to be a RflPodRow");
+
+            pod_row.bind(&obj);
+        });
+    }
+
+    fn add_pod(&self, name: String) {
+        let pod = crate::models::pod::Pod::new(name);
+        self.pods().append(&pod);
+    }
+
+    fn get_pods_for_namespace(&self, namespace: String) {
+        let (sender, receiver) = MainContext::channel::<Vec<String>>(glib::PRIORITY_DEFAULT);
+
+        spawn_tokio!(async move {
+            let client = Client::try_default().await.unwrap();
+            let pods = Api::<Pod>::namespaced(client, &namespace);
+            let lp = ListParams::default();
+            let ps = pods.list(&lp).await.unwrap();
+            let mut names = Vec::new();
+
+            for p in ps.items {
+                names.push(p.metadata.name.unwrap());
+            }
+
+            sender.send(names).unwrap();
+        });
+
+        receiver.attach(
+            None,
+            clone!(@weak self as window => @default-return glib::Continue(false), move |name| {
+              for n in name {
+                window.add_pod(n);
+              }
+              glib::Continue(true)
+            }),
+        );
     }
 }
