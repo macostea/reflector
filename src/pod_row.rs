@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 
 use gtk::{
-    glib::{self, clone, Binding},
+    glib::{self, Binding},
     prelude::*,
     subclass::prelude::*,
     CompositeTemplate,

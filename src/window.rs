@@ -84,7 +84,7 @@ impl RflWindow {
             let ns = namespaces.list(&lp).await.unwrap();
             let mut names = Vec::new();
 
-            for n in ns.items {
+            for n in ns {
                 names.push(n.metadata.name.unwrap());
             }
 
@@ -158,6 +158,19 @@ impl RflWindow {
 
             pod_row.bind(&obj);
         });
+
+        factory.connect_unbind(move |_, list_item| {
+          let pod_row = list_item
+            .downcast_ref::<ListItem>()
+            .expect("Needs to be a ListItem")
+            .child()
+            .and_downcast::<RflPodRow>()
+            .expect("Needs to be a RflPodRow");
+
+          pod_row.unbind();
+        });
+
+        self.imp().list_view.set_factory(Some(&factory));
     }
 
     fn add_pod(&self, name: String) {
@@ -166,6 +179,7 @@ impl RflWindow {
     }
 
     fn get_pods_for_namespace(&self, namespace: String) {
+        self.pods().remove_all();
         let (sender, receiver) = MainContext::channel::<Vec<String>>(glib::PRIORITY_DEFAULT);
 
         spawn_tokio!(async move {
@@ -175,7 +189,7 @@ impl RflWindow {
             let ps = pods.list(&lp).await.unwrap();
             let mut names = Vec::new();
 
-            for p in ps.items {
+            for p in ps {
                 names.push(p.metadata.name.unwrap());
             }
 

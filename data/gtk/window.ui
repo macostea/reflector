@@ -2,11 +2,12 @@
 <interface>
   <template class="RflWindow" parent="GtkApplicationWindow">
     <property name="title">Reflector</property>
-    <property name="default_width">800</property>
-    <property name="default_height">600</property>
+    <property name="width-request">800</property>
+    <property name="height-request">600</property>
     <child>
       <object class="GtkBox">
         <property name="orientation">vertical</property>
+        <property name="spacing">6</property>
         <child>
           <object class="GtkBox">
             <child>
@@ -25,12 +26,14 @@
           </object>
         </child>
         <child>
-          <object class="GtkScrolledWindow" id="scrolled_window">
-            <property name="vexpand">True</property>
+          <object class="GtkScrolledWindow">
+            <property name="hscrollbar-policy">never</property>
             <property name="min-content-height">360</property>
+            <property name="vexpand">true</property>
             <child>
               <object class="GtkListView" id="list_view">
                 <property name="valign">start</property>
+                <property name="show-separators">True</property>
               </object>
             </child>
           </object>
