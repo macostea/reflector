@@ -1,4 +1,5 @@
 use crate::{config, window::RflWindow};
+use adw::{self, subclass::prelude::*};
 use gtk::{gio, glib, prelude::*, subclass::prelude::*};
 
 mod imp {
@@ -11,7 +12,7 @@ mod imp {
     impl ObjectSubclass for RflApplication {
         const NAME: &'static str = "RflApplication";
         type Type = super::RflApplication;
-        type ParentType = gtk::Application;
+        type ParentType = adw::Application;
     }
 
     impl ObjectImpl for RflApplication {}
@@ -24,11 +25,12 @@ mod imp {
     }
 
     impl GtkApplicationImpl for RflApplication {}
+    impl AdwApplicationImpl for RflApplication {}
 }
 
 glib::wrapper! {
   pub struct RflApplication(ObjectSubclass<imp::RflApplication>)
-    @extends gtk::Application, gio::Application,
+    @extends adw::Application, gtk::Application, gio::Application,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 

@@ -4,11 +4,10 @@ use once_cell::sync::Lazy;
 
 mod application;
 mod config;
-mod utils;
-mod window;
-// mod pod_list;
 mod models;
 mod pod_row;
+mod utils;
+mod window;
 
 // static GRESOURCE_BYTES: &[u8] =
 //     gvdb_macros::include_gresource_from_dir!("/com/mcostea/Reflector", "data/resources");

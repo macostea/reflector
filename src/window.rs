@@ -1,3 +1,4 @@
+use adw::{self, subclass::prelude::*};
 use gtk::{
     gio,
     glib::{self, clone, MainContext},
@@ -34,7 +35,7 @@ mod imp {
     impl ObjectSubclass for RflWindow {
         const NAME: &'static str = "RflWindow";
         type Type = super::RflWindow;
-        type ParentType = gtk::ApplicationWindow;
+        type ParentType = adw::ApplicationWindow;
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
             obj.init_template();
@@ -59,12 +60,13 @@ mod imp {
     }
     impl WidgetImpl for RflWindow {}
     impl WindowImpl for RflWindow {}
+    impl AdwApplicationWindowImpl for RflWindow {}
     impl ApplicationWindowImpl for RflWindow {}
 }
 
 glib::wrapper! {
   pub struct RflWindow(ObjectSubclass<imp::RflWindow>)
-    @extends gtk::ApplicationWindow, gtk::Window, gtk::Widget,
+    @extends adw::ApplicationWindow, gtk::ApplicationWindow, gtk::Window, gtk::Widget,
     @implements gio::ActionGroup, gio::ActionMap;
 }
 
@@ -75,7 +77,7 @@ impl RflWindow {
     }
 
     fn get_namespaces(&self) {
-        let (sender, receiver) = MainContext::channel::<Vec<String>>(glib::PRIORITY_DEFAULT);
+        let (sender, receiver) = MainContext::channel::<Vec<String>>(glib::Priority::DEFAULT);
 
         spawn_tokio!(async move {
             let client = Client::try_default().await.unwrap();
@@ -93,11 +95,11 @@ impl RflWindow {
 
         receiver.attach(
             None,
-            clone!(@weak self as window => @default-return glib::Continue(false), move |name| {
+            clone!(@weak self as window => @default-return glib::ControlFlow::Break, move |name| {
               for n in name {
                 window.imp().namespaces.append(&n);
               }
-              glib::Continue(true)
+              glib::ControlFlow::Continue
             }),
         );
     }
@@ -111,7 +113,7 @@ impl RflWindow {
     }
 
     fn setup_pods(&self) {
-        let model = gio::ListStore::new(crate::models::pod::Pod::static_type());
+        let model = gio::ListStore::new::<crate::models::pod::Pod>();
 
         self.imp().pods.replace(Some(model));
 
@@ -160,14 +162,14 @@ impl RflWindow {
         });
 
         factory.connect_unbind(move |_, list_item| {
-          let pod_row = list_item
-            .downcast_ref::<ListItem>()
-            .expect("Needs to be a ListItem")
-            .child()
-            .and_downcast::<RflPodRow>()
-            .expect("Needs to be a RflPodRow");
+            let pod_row = list_item
+                .downcast_ref::<ListItem>()
+                .expect("Needs to be a ListItem")
+                .child()
+                .and_downcast::<RflPodRow>()
+                .expect("Needs to be a RflPodRow");
 
-          pod_row.unbind();
+            pod_row.unbind();
         });
 
         self.imp().list_view.set_factory(Some(&factory));
@@ -180,7 +182,7 @@ impl RflWindow {
 
     fn get_pods_for_namespace(&self, namespace: String) {
         self.pods().remove_all();
-        let (sender, receiver) = MainContext::channel::<Vec<String>>(glib::PRIORITY_DEFAULT);
+        let (sender, receiver) = MainContext::channel::<Vec<String>>(glib::Priority::DEFAULT);
 
         spawn_tokio!(async move {
             let client = Client::try_default().await.unwrap();
@@ -198,11 +200,11 @@ impl RflWindow {
 
         receiver.attach(
             None,
-            clone!(@weak self as window => @default-return glib::Continue(false), move |name| {
+            clone!(@weak self as window => @default-return glib::ControlFlow::Break, move |name| {
               for n in name {
                 window.add_pod(n);
               }
-              glib::Continue(true)
+              glib::ControlFlow::Continue
             }),
         );
     }
