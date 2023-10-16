@@ -1,5 +1,6 @@
 use application::RflApplication;
-use gtk::{glib, prelude::*};
+use gtk::glib;
+use adw::prelude::*;
 use once_cell::sync::Lazy;
 
 mod application;

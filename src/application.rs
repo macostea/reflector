@@ -1,6 +1,6 @@
 use crate::{config, window::RflWindow};
-use adw::{self, subclass::prelude::*};
-use gtk::{gio, glib, prelude::*, subclass::prelude::*};
+use adw::{self, prelude::*, subclass::prelude::*};
+use gtk::{gio, glib};
 
 mod imp {
     use super::*;
@@ -15,7 +15,15 @@ mod imp {
         type ParentType = adw::Application;
     }
 
-    impl ObjectImpl for RflApplication {}
+    impl ObjectImpl for RflApplication {
+        fn constructed(&self) {
+            let obj = self.obj();
+
+            self.parent_constructed();
+
+            obj.setup_actions();
+        }
+    }
     impl ApplicationImpl for RflApplication {
         fn activate(&self) {
             let application = self.obj();
@@ -40,5 +48,17 @@ impl RflApplication {
             .property("application-id", config::APP_ID)
             .property("resource-base-path", "/com/mcostea/Reflector")
             .build()
+    }
+
+    pub fn setup_actions(&self) {
+        let actions = [
+            gio::ActionEntryBuilder::new("quit")
+                .activate(|app: &Self, _, _| app.quit())
+                .build(),
+        ];
+
+        self.add_action_entries(actions);
+
+        self.set_accels_for_action("window.close", &["<Ctrl>W"]);
     }
 }

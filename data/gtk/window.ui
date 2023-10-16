@@ -1,33 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
-  <menu id="main-menu">
-    <submenu>
-      <attribute name="label" translatable="yes">_Filter</attribute>
-      <item>
-        <attribute name="label" translatable="yes">_All</attribute>
-        <attribute name="action">win.filter</attribute>
-        <attribute name="target">All</attribute>
-      </item>
-      <item>
-        <attribute name="label" translatable="yes">_Open</attribute>
-        <attribute name="action">win.filter</attribute>
-        <attribute name="target">Open</attribute>
-      </item>
-      <item>
-        <attribute name="label" translatable="yes">_Done</attribute>
-        <attribute name="action">win.filter</attribute>
-        <attribute name="target">Done</attribute>
-      </item>
-    </submenu>
-    <item>
-      <attribute name="label" translatable="yes">_Remove Done Tasks</attribute>
-      <attribute name="action">win.remove-done-tasks</attribute>
-    </item>
-    <item>
-      <attribute name="label" translatable="yes">_Keyboard Shortcuts</attribute>
-      <attribute name="action">win.show-help-overlay</attribute>
-    </item>
-  </menu>
   <template class="RflWindow" parent="AdwApplicationWindow">
     <property name="title">Reflector</property>
     <property name="width-request">800</property>
@@ -37,6 +9,37 @@
         <property name="can-navigate-back">True</property>
         <child>
           <object class="GtkBox">
+            <property name="orientation">vertical</property>
+            <property name="spacing">6</property>
+            <child>
+              <object class="GtkBox">
+                <property name="orientation">vertical</property>
+                <child>
+                  <object class="AdwHeaderBar">
+                    <binding name="show-end-title-buttons">
+                      <lookup name="folded">leaflet</lookup>
+                    </binding>
+                  </object>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="label">Namespace: </property>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkDropDown" id="namespace_dropdown">
+                        <property name="model">
+                          <object class="GtkStringList" id="namespaces">
+                          </object>
+                        </property>
+                      </object>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
           </object>
         </child>
         <child>
@@ -50,22 +53,12 @@
         <child>
           <object class="GtkBox">
             <property name="orientation">vertical</property>
-            <property name="spacing">6</property>
+            <property name="hexpand">True</property>
             <child>
-              <object class="GtkBox">
-                <child>
-                  <object class="GtkLabel">
-                    <property name="label">Namespace: </property>
-                  </object>
-                </child>
-                <child>
-                  <object class="GtkDropDown" id="namespace_dropdown">
-                    <property name="model">
-                      <object class="GtkStringList" id="namespaces">
-                      </object>
-                    </property>
-                  </object>
-                </child>
+              <object class="AdwHeaderBar">
+                <property name="title-widget">
+                  <object class="AdwWindowTitle" />
+                </property>
               </object>
             </child>
             <child>
@@ -74,9 +67,16 @@
                 <property name="min-content-height">360</property>
                 <property name="vexpand">true</property>
                 <child>
-                  <object class="GtkListView" id="list_view">
-                    <property name="valign">start</property>
-                    <property name="show-separators">True</property>
+                  <object class="AdwClamp">
+                    <child>
+                      <object class="GtkListView" id="list_view">
+                        <property name="valign">start</property>
+                        <property name="show-separators">True</property>
+                        <style>
+                          <class name="boxed-list" />
+                        </style>
+                      </object>
+                    </child>
                   </object>
                 </child>
               </object>

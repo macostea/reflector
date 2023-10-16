@@ -1,8 +1,5 @@
-use gtk::{
-    glib::{self, ParamSpec, Properties},
-    prelude::*,
-    subclass::prelude::*,
-};
+use gtk::glib::{self, ParamSpec, Properties};
+use adw::{prelude::*, subclass::prelude::*};
 use std::cell::RefCell;
 
 mod imp {

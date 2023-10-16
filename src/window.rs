@@ -1,9 +1,7 @@
-use adw::{self, subclass::prelude::*};
+use adw::{self, subclass::prelude::*, prelude::*};
 use gtk::{
     gio,
     glib::{self, clone, MainContext},
-    prelude::*,
-    subclass::prelude::*,
     CompositeTemplate, DropDown, ListItem, NoSelection, SignalListItemFactory, StringList,
     StringObject,
 };
@@ -44,6 +42,9 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             Self::bind_template(klass);
             klass.bind_template_instance_callbacks();
+
+            // Set up actions
+
         }
     }
 
@@ -72,7 +73,7 @@ glib::wrapper! {
 
 #[gtk::template_callbacks]
 impl RflWindow {
-    pub fn new<A: IsA<gtk::Application>>(app: &A) -> Self {
+    pub fn new<A: IsA<adw::Application>>(app: &A) -> Self {
         glib::Object::builder().property("application", app).build()
     }
 
